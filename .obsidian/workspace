@@ -1,0 +1,163 @@
+{
+  "main": {
+    "id": "8e4d428d9740c56f",
+    "type": "split",
+    "children": [
+      {
+        "id": "2c90a6debf22d0bd",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "🏆개발작업일지/코드 스플리팅.md",
+            "mode": "source",
+            "source": false
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "e36258656a1a9773",
+    "type": "split",
+    "children": [
+      {
+        "id": "cc7125b030f0b402",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "82134b9b38024bad",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "695d4533ad091ff6",
+            "type": "leaf",
+            "state": {
+              "type": "starred",
+              "state": {}
+            }
+          },
+          {
+            "id": "c63e34c088458f6e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          }
+        ],
+        "currentTab": 2
+      }
+    ],
+    "direction": "horizontal",
+    "width": 228
+  },
+  "right": {
+    "id": "66f31fbf152f70f5",
+    "type": "split",
+    "children": [
+      {
+        "id": "06ca521cb3f165bf",
+        "type": "tabs",
+        "dimension": 26.07561929595828,
+        "children": [
+          {
+            "id": "db577f9898c528d6",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": false
+              }
+            }
+          },
+          {
+            "id": "ad9b555db272f6cc",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "🏆개발작업일지/코드 스플리팅.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "7b84f676e7c5360c",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "🏆개발작업일지/코드 스플리팅.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "38603322e557f03f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "🏆개발작업일지/코드 스플리팅.md"
+              }
+            }
+          }
+        ],
+        "currentTab": 1
+      },
+      {
+        "id": "3a5faadb2bc8c49e",
+        "type": "tabs",
+        "dimension": 73.92438070404172,
+        "children": [
+          {
+            "id": "6c5067455051f9f3",
+            "type": "leaf",
+            "pinned": true,
+            "state": {
+              "type": "timeline",
+              "state": {},
+              "pinned": true
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 467
+  },
+  "active": "2c90a6debf22d0bd",
+  "lastOpenFiles": [
+    "🏆개발작업일지/2022-09-09.md",
+    "🏆개발작업일지/2022-09-11.md",
+    "🏆개발작업일지/코드 스플리팅.md",
+    "🏆개발작업일지/해커톤 피피티자료.md",
+    "🏆개발작업일지/리덕스 미들웨어.md",
+    "🏆개발작업일지/✅Java/Java_study_9_7.md",
+    "🏆개발작업일지/캡스톤 정리.md",
+    "🏆개발작업일지/리덕스 라이브러리.md",
+    "무제노트 1.md",
+    "🏆개발작업일지/✅API/async,await.md"
+  ]
+}

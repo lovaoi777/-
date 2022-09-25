@@ -143,5 +143,201 @@
 <h4>next란 ?
 	<li>현재 처리중인 미들웨어의 다음 미들웨어을 호출하는 함수입니다. 
 	<li>미들웨어를 등록하고 next 함수를 호출하지 않으면, 그다음 미들웨어를 처리하지 않습니다.
+	<li>미들웨어는 app.use를 사용하여 등록되는 순서대로 처리됩니다.
 
+<p> 다음과 같이 현재 요청을 받은 주소와 우리가 정해 준 숫자를 기록하는 두 개의 미들웨어 src/index
+
+	const Koa = require('koa');
+	const app = new Koa();
+	
+	app.use((ctx,next)=> {
+	console.log(ctx.url);
+	console.log(1);
+	next();
+	});
+	
+	app.use((ctx, next) => {
+	console.log(2);
+	next();
+	});
+	
+	app.use(ctx => {
+	ctx.body = 'hello world!';
+	}); //ctx은 매게 변수
+	//hello world라는 텍스트를 반환하도록 설정
+	
+	app.listen(4000, () => {
+	console.log('Listening to port 4000');
+	}) //서버 포트는 4000번 포트
+
+<p> 다시 node src 명령어 실행하면 터미널에 아래와 같은 결과물이 나타납니다.
+
+![[Pasted image 20220925021450.png]]
+
+<p> 크롬 브라우저는 사용자가 웹 페이지에 들어가면 해당 사이트의 아이콘 파일인 /favicon.ico 파일을 서버에 요청하기 때문에 결과에 / 경로도 나타나고 /favicon.ico 경로도 나타납니다.
+
+<p>이번에는 첫 번째 미들웨어에서 호출하던 next 함수를 주석으로 처리하겠습니다.
+
+	const Koa = require('koa');
+	const app = new Koa();
+	
+	app.use((ctx,next)=> {
+	console.log(ctx.url);
+	console.log(1);
+	//next();
+	});
+	
+	app.use((ctx, next) => {
+	console.log(2);
+	next();
+	});
+	
+	app.use(ctx => {
+	ctx.body = 'hello world!';
+	});
+	//hello world라는 텍스트를 반환하도록 설정
+	
+	app.listen(4000, () => {
+	console.log('Listening to port 4000');
+	}) //서버 포트는 4000번 포트
+
+
+![[Pasted image 20220925200559.png]]
+
+<p> next를 호출하지 않으니 첫 번째 미들웨어까지만 실행하고 그 아래에 있는 미들웨어는 모두 무시 되었습니다.
+
+<p> 이런 속성을 사용하여 조건부로 다음 미들웨어 처리를 무시하게 만들 수 있다. 다음 코드에서는 요청 경로에 authorized =1 이라는 쿼리 파라미터가 포함되어 있으면 이후 미들웨어를 처리해 주고, 그렇지 않으면 이후 미들웨어를 처리하지 않습니다.
+
+
+	const Koa = require('koa');
+	const app = new Koa();
+	
+	app.use((ctx,next)=> {
+	console.log(ctx.url);
+	console.log(1);
+	if(ctx.query.authorized !== '1'){
+		ctx.status = 401; //Unauthorized
+		return;
+	}
+	
+	next();
+	});
+	
+	app.use((ctx, next) => {
+	console.log(2);
+	next();
+	});
+	
+	app.use(ctx => {
+	ctx.body = 'hello world!';
+	});
+	//hello world라는 텍스트를 반환하도록 설정
+	
+	app.listen(4000, () => {
+	console.log('Listening to port 4000');
+	}) //서버 포트는 4000번 포트
+
+
+<p>쿼터 파라미터는 문자열이기 때문에 비교할 때는 꼭 문자열 형태로 비교해야합니다. 이제는 서버를 재 시작한 뒤 다음 링크에 들어가서 어떤 결과가 나타 나는지 확인해 보세요.
+
+<li>http://localhost:4000/
+<br>
+<li>http://localhost:4000/?authorized=1
+
+###3.2.1 next 함수는 Promise를 반환
+
+<p>next 함수를 호출하면 Promise를 반환합니다. 이는 Koa가 Express 와 차별화되는 부분입니다.
+<p>next 함수가 반환하는 Promise는 다음에 처리해야 할 미들웨어가 끝나야 완료됩니다. 다음과 같이 next 함수 호출 이후에 then을 사용하여 Promise가 끝난 다음 콘솔에 END를 기록하도록 수정해보기
+
+	const Koa = require('koa');
+	const app = new Koa();
+	
+	app.use((ctx,next)=> {
+	console.log(ctx.url);
+	console.log(1);
+	if(ctx.query.authorized !== '1'){
+		ctx.status = 401; //Unauthorized
+		return;
+	}
+	next().then(() =>;{
+		console.log('END');
+	});
+	});
+	
+	app.use((ctx, next) => {
+	console.log(2);
+	next();
+	});
+	
+	app.use(ctx => {
+	ctx.body = 'hello world!';
+	});
+	//hello world라는 텍스트를 반환하도록 설정
+	
+	app.listen(4000, () => {
+	console.log('Listening to port 4000');
+	}) //서버 포트는 4000번 포트
+
+![[Pasted image 20220925210111.png]]
+
+
+### 3.2.2 async/await 사용하기
+
+<p>Koa는 async/await를 정식으로 지원하기 때문에 해당 문법을 아주 편하게 사용할 수 있습니다.
+
+	(메모) 서버 사이드 렌더링을 할 때 사용했던 Express도 async/await 문법을 사용할 수잇지만, 오류를 처리하는 부분이 제대로 작동하지 않을 수 있습니다. 백엔드 개발을 하면서 예상치 못한 에러를 제대로 잡아내려면 express-async-errors라는 라이브러리를 따로 사용해야합니다.
+
+
+
+	const Koa = require('koa');
+	const app = new Koa();
+	
+	app.use(async(ctx,next)=> {
+	console.log(ctx.url);
+	console.log(1);
+	if(ctx.query.authorized !== '1'){
+		ctx.status = 401; //Unauthorized
+		return;
+	}
+	await next();
+		console.log('END');
+	});
+	
+	app.use((ctx, next) => {
+	console.log(2);
+	next();
+	});
+	
+	app.use(ctx => {
+	ctx.body = 'hello world!';
+	});
+	//hello world라는 텍스트를 반환하도록 설정
+	
+	app.listen(4000, () => {
+	console.log('Listening to port 4000');
+	}) //서버 포트는 4000번 포트
+	
+![[Pasted image 20220925210726.png]]
+
+## 4. nodemon 사용하기
+
+<p>서버 코드를 변경할 때마다 서버를 재시작하는 것이 번거롭기 때문에 nodemon이라는 도구를 사용하면 코드를 변경할 때마다 서버를 자동으로 재시작해줍니다.
+
+	yarn add --dev nodemon
+
+<p> 그다음 package.json scripts를 다음과 같이 입력하세요.
+
+![[Pasted image 20220925211600.png]]
+
+<p>start 스크립트에는 서버를 시작하는 명령어를 넣고, start:dev 스크립트에는 nodemon을 통해 서버를 실행해 주는 명령어를 넣습니다. 여기서 nodemon은 src 디렉터리를 주시하고 있다가 해당 디렉터리 내부의 어떤 파일이 변경되면, 이를 감지하고 src/index.js 파일을 재시작 해줍니다.
+
+<li>	# yarn start # 재시작이 필요 없을 때
+<li> # yarn start : dev # 재시작이 필요할 때
+
+![[Pasted image 20220925212256.png]]
+
+<p>파일을 저장할 때 위와 같이 터미널에 출력된다
+
+
+## 5. koa-router 사용하기
 

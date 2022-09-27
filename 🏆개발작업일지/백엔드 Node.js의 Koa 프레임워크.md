@@ -102,7 +102,7 @@
 
 ## Koa 기본 사용법
 
-### 3.1 서버띄우기
+###   3.1 서버띄우기
 
 	const Koa = require('koa');
 	const app = new Koa();
@@ -244,7 +244,7 @@
 <br>
 <li>http://localhost:4000/?authorized=1
 
-###3.2.1 next 함수는 Promise를 반환
+### 3.2.1 next 함수는 Promise를 반환
 
 <p>next 함수를 호출하면 Promise를 반환합니다. 이는 Koa가 Express 와 차별화되는 부분입니다.
 <p>next 함수가 반환하는 Promise는 다음에 처리해야 할 미들웨어가 끝나야 완료됩니다. 다음과 같이 next 함수 호출 이후에 then을 사용하여 Promise가 끝난 다음 콘솔에 END를 기록하도록 수정해보기
@@ -340,4 +340,203 @@
 
 
 ## 5. koa-router 사용하기
+
+
+
+<p> 앞에서 리액트를 배울 때 웹 브라우저의 라우ㅇ을 돕는 리액트 라우터 라브러리를 사용해 보았습니다. Koa를 사용 할 때도 다른 주소로 요청이 들어올 경우 다른 작업을 처리할 수 있도록 라우터를 사용해야 합니다. Koa 자체에 이 기능이 내장되어 잇지 않으므로, Koa-router 모듈을 설치해야 합니다.
+
+	yarn add koa-router
+
+### 5.1 기본 사용법
+
+<p>index.js에서 라우터를 불러와 적용하는 방법입니다.
+
+	const Koa = require('koa');
+	const Router = new Router();
+
+	//라우터 설정
+	router.get('/', ctx =>{
+	ctx.body = '홈';
+	})
+	router.get('/about', ctx=>{
+	ctx.body= "소개";
+	});
+
+	//app 인스턴스에 라우터 적용
+	app.use(router.routes()).use(router.allowMethods());
+
+	app.listen(4000, () => { 
+		console.log('Listening to port 4000');
+	})
+
+
+<p>koa-router를 불러온 뒤 이를 사용하여 Router 인스턴스를 만들었습니다. 그리고 / 경로로 들어오면 '홈'을 띄우고, /about 경로로들어오면 '소개' 를 텍스로 나타나도록 설정하였습니다.
+
+<p>이처럼 라우트를 설정할 떄, router.get의 첫번째 파라미터에는 라우트의 경로 , 두번 째 파라미터에는 해당 라우트에 적용할 미드웨어 함수!!를 넣습니다. 여기서 get키워드는 해당 라우트에서 사용할 HTTP 메서드를 의미합니다. get 대신에 post,put,delete 등을 넣을 수있습니다.
+
+### 5.2 라우트 파라미터와  쿼리
+
+<p> 라우터의 파라미터의 설정 할 때는 /about/:name 형식으로 콜론( ; )을 사용하여 라우트 경로를 설정합니다. 또 파라미터가 있을 수도 있고 없을 수도 있다면 /about/name? 같은 형식으로 파라미터 이름 뒤에 물음표를 사용합니다. 이렇게 설정한  파라미터는 함수의 ctx.params 객체에서 조회합니다.
+
+<p>URL 쿼리의 경우, 예를 들어 /posts/?id=10 같은 형식으로 요청했다면 해당 값을 ctx.query에서 조회 할 수 있습니다. 쿼리 문자열을 자동으로 객체 형태로 파싱해 주므로 별도로 파싱 함수를 돌릴 필요가 없습니다.(문자열 형태의 쿼리 문자열을 조회해야 할 때는 ctx.querystring을 사용합니다. )
+
+	const Koa = require('koa');
+	const Router = require('koa-router');
+
+	const app = new Koa();
+	const router = new Router();
+	
+	//라우터 설정
+	router.get('/', ctx =>{
+	ctx.body = '홈';
+	})
+	router.get('/about/:name?',ctx=>{
+	const {name} = ctx.params;
+	//name의 존재 유무에 따라 다른결과 소개
+	ctx.body = name ? `${name}의 소개` : '소개';
+	});
+	router.get('/posts',ctx => {
+	const { id } = ctx.query;
+	// id의 존재 유무에 따라 다른 결과 출력
+	ctx.body = id ? `포스트# ${id}` : '포스트 아이디가 없습니다.';
+	})
+	
+	//app 인스턴스에 라우터 적용
+	app.use(router.routes()).use(router.allowedMethods());
+	app.listen(4000, () => {
+	console.log('Listening to port 4000');
+	}) //서버 포트는 4000번 포트
+
+<p> 코드를 작성하고 다음 아래의 링크로 들어가시요
+
+<li>http://localhost:4000/about/react
+<li>http://localhost:4000/posts
+<li>http://localhost:4000/posts?=id
+
+![[Pasted image 20220927153653.png]]
+
+![[Pasted image 20220927153709.png]]
+
+![[Pasted image 20220927153718.png]]
+
+<p>파라미터와 쿼리는 둘 다 주소를 통해 특정 값을 받아 올 때 사용하지만, 용도가 서로 조금씩 다릅니다. 정해진 규칙은 따로 없지만, 일반적으로 파라미터는 처리할 작업의 카테고리를 받아 오거나 , 고유 ID 혹은 이름으로 특정 데이터를 조회할 때 사용합니다. 반면, 쿼리는 옵션에 관련된 정보를 받아 옵니다. 예를 들어 여러 항목을 리스팅하는 API라면, 어떤 조건을 만족하는 항목을 보여 줄지 또는 어떤 기준으로 정렬할지를 정해야 할 때 쿼리를 사용합니다.
+
+
+### 5.3 REST API
+<p>웹 애플리케이션을 만들려면 데이터베이스에 정보를 입력하고 읽어 와야 합니다. 그런데 웹 브라우저에서 데이터베이스에 직접 접속하여 데이터를 변경한다면 보안상 문제가 되니깐 그래서 REST API를 만들어서 사용합니다.
+
+![[Pasted image 20220927155033.png]]
+
+<p>클라이언트가 서버에 자신이 데이터를 조회 , 생성, 삭제, 업데이트 하겠다고 요청하면, 서버는 필요한 로직에 따라 데이터베이스에 접근하여 직업을 처리합니다.
+
+<p>REST API는 요청 종류에 따라 다른 HTTP 메서드를 사용합니다. HTTP 메서드는 여러 종류가 있으며 , 주로 사용하는 메서드는 아래와 같습니다.
+<br>
+
+<h4>HTTP 메서드의 종류
+<li>GET : 데이터를 조회할 때 사용합니다.
+<li>POST : 데이터를 등록할 때 사용합니다. 인증 작업을 거칠 때 사용하기도 합니다.
+<li>DELETE : 데이터를 지울 때 사용합니다.
+<li>PUT : 데이터를 새 정보로 통재로 교체할 때 사용합니다.
+<li>PATCH  : 데이터의 특정 필드를 수정할 때 사용합니다.
+
+<p>메서드의 종류에 따라 get,post, delete, put , patch를 사용하여 라우터에서 각 메서드의 요청을 처리합니다. 
+
+<p>REST API를 설계할 때는 API 주소와 메서드에 따라 어떤 역할을 하는지 쉽게 파악할 수 있도록 적상 해야합니다. 
+
+
+<p>블로그 포스트용 REST API
+<li> POST /posts  : 포스트 작성
+<li>GET /posts  : 포스트 목록 조회
+<li>GET /posts/:id  : 특정 포스트 조회
+<li>DELETE /posts/:id   : 특정 포스트 삭제
+<li>PATCH /posts/:id   : 특정 포스트 업데이트(구현 방식에 따라 PUT으로도 사용 가능)
+<li>POST /posts/:id/comments    : 특정 포스트에 덧글 등록
+<li>GET / posts/:id/comments  : 특정 포스트의 덧글 목록 조회
+<li>DELETE /posts/:id/comment/:commentID :  특정 포스트의 특정 덧글 삭제
+
+### 5.4 라우터 모듈화
+
+<p> 프로젝트를 진행하다 보면 여러 종류의 라우트를 만들게 됩니다. 각 라우트를 index.js 파일 하나에 모두 작성하면, 코드가 너무 길어질 뿐 아니라 유지보수하기도 힘들어 집니다. 여기서는 라우터를 여러 파일로 분리시켜서 작성하고, 이를 불러와 적용하는 방법을 해보겠습니다.
+
+<p>src 디렉터리에 api디렉터리를 생성하고, 그안에 index.js 파일을 만들었습니다.
+
+
+<p>src/api/index.js
+
+		const Router = require('koa-router');
+		const api = new Router;
+		
+		api.get('/test', ctx=>{
+		ctx.body = 'test 성공';
+		});
+		
+		//라우터로 보냅니다.
+		module.exports = api;
+
+<p>src/index.js
+
+	const Koa = require('koa');
+	const Router = require('koa-router');
+	const api = require('./api');
+	
+	const app = new Koa();
+	const router = new Router();
+	
+	//라우터 설정
+	router.use('/api', api.routes());
+	
+	//app 인스턴스에 라우터 적용
+	app.use(router.routes()).use(router.allowedMethods());
+	
+	app.listen(4000, () => {
+	console.log('Listening to port 4000');
+	}) //서버 포트는 4000번 포트
+
+<p>우리가 만든 api 라우터를 서버의 매인 라우터의 /api 경로로 설정했습니다. 따라서 /api/test 경로로 요청하면 조금 전에 준비했던 'test 성공 ' 문자열이 나타날 것입니다.
+
+![[Pasted image 20220927171838.png]]
+
+### 5.5 posts 라우트 생성
+
+<p> 이번에는 api 라우트 내부에 posts 라우트를 만들어 보겠습니다. api 디렉터리에 posts 디렉터리를 만들고 , 그 내부에 index.js 파일만들겠습니다.
+
+<p>src/api/posts/index.js
+	const Router = require('koa-router');
+	const posts = new Router();  
+
+	const printInfo = ctx => {
+		ctx.body = {
+			method : ctx.method,
+			path : ctx.path,
+			params : ctx.params,
+		};
+	};
+	
+		posts.get('/', printInfo);
+	posts.post('/',printInfo);
+	posts.get('/:id', printInfo);
+	posts.delete('/:id', printInfo);
+	posts.put('/:id', printInfo);
+	posts.path('/:id', printInfo);
+	module.exports = posts;
+
+<p>posts 라우트에 여러 종류의 라우트를 설정한 후 모든 printInfo 함수를 호출하도록 설정하였습니다. 문자열이 아닌 JSON 객체를 반환하도록 설정하고, 이 객체는 현재 요청의 메서드 , 경로, 파라미터를 담았습니다.
+
+<p> 코드를 완성한 후, api 라우트에 posts 라우트를 연결합니다. 연결하는 방법은 서버의 메인 파일에 api 라우트를 적용하는 방법과 비슷합니다.
+
+<p>src/api/index.js
+
+	const Router = require('koa-router');
+	const posts = require('./posts')
+	
+	const api = new Router;
+	api.use('/posts', posts.routes() )
+	
+	//라우터로 보냅니다.
+	module.exports = api;
+	
+<p>기존 test 라우트는 지우고, posts 라우트를 불러와서 설정해 주었습니다. 우선 GET/ api/posts 라우터부터 테스트 해보겠습니다.
+
+![[Pasted image 20220927175401.png]]
+
 

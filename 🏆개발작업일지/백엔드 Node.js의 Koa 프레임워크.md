@@ -540,3 +540,340 @@
 ![[Pasted image 20220927175401.png]]
 
 
+### 5.5.1 Postman 의 설치 및 사용
+
+<p> Postman은 macOS, Windows,  리눅스에서 모두 사용할 수 있는 프로그램이다. 이프로그램은 https://www.postman.com/ 에서 인스톨러로 설치할수 있습니다. GET 셀렉트 박스를 클릭하여 메서드 선택한후 Send 버튼을 누르면 요청 할 수있다.
+
+
+![[Pasted image 20220928184904.png]]
+
+
+### 5.5.2 컨트롤러 파일 작성
+
+<p> 라우트를 작성하는 과정에서 특징 경로에 미들웨어를 등록 할 때는 다음과 같이 두 번째 인자에 함수를 선언해서 바로 넣을 줄 수 있습니다.
+
+	router.get('/', ctx= { 
+	});
+
+<p> 각 라우트 처리 함수가 코드가 길면 라우터 설정을 한눈에 보기 힘들다. 그렇게 때문에 이 라우트 처리 함수들을 다른 파일로 따로 분리해서 관리할 수 있습니다. 이 라우트 처리 함수만 모아 놓은 파일을 컨트롤러라고 합니다.  
+
+<p> 지금은 아직 데이터베이스를 연결하지 않았으므로 자바스크립트의 배열 기능만 사용하여 임시로 기능을 구현해보았습니다.
+
+<p>API 기능을 본젹적으로 구현하기 전에 먼저 koa-bodyparser 미들웨어를 적용해야 합니다. 이 미들웨어는 POST/PUT/PATCH 같은 메서드의 Requset Body에 JSON 형식으로 데이터를 넣어 주면, 이를 파싱하여 서버에서 사용할 수 있다.
+
+		yarn add koa-bodyparser
+
+<p>이어서 미들웨어를 불러와 적용하세요 . src/index.js
+
+	const Router = require('koa-router');
+	const postsCtrl = require('./posts.ctrl')
+	
+	const posts = new Router();
+	
+	const printInfo = ctx => {
+	ctx.body = {
+	method : ctx.method,
+	path : ctx.path,
+	params : ctx.params,
+		};
+	};
+	posts.get('/', postsCtrl.list);
+	posts.post('/',postsCtrl.write);
+	posts.get('/:id', postsCtrl.read);
+	posts.delete('/:id',postsCtrl.remove);
+	posts.put('/:id',postsCtrl.replace);
+	posts.patch('/:id',postsCtrl.update);
+	module.exports = posts;
+
+<p>posts 컨트롤러 입니다 . ->posts/posts.ctrl.js
+
+	let postId = 1; //id의 초깃값입니다
+	//posts 배열 초기 데이터
+	const posts =[
+	{
+	id : 1,
+	title : '제목',
+	body : '내용',
+	},
+	];
+	/*
+	
+	포스트 작성
+	
+	POST /api/posts
+	
+	{title, body}
+	
+	*/
+	
+	  
+	
+	exports.write = ctx => {
+	
+	//REST API의 Requst Body는 ctx.request.body 에서 조회 할수 있습니다.
+	
+	const{title, body} = ctx.request.body;
+	
+	postId += 1; //기존 postId 값에 1을 더합니다
+	
+	const post = {id : postId , title, body};
+	
+	posts.push(post);
+	
+	};
+	
+	  
+	
+	/*
+	
+	포스트 목록 조회
+	
+	GET /api /posts
+	*/
+	exports.list = ctx => {
+	ctx.body = posts;
+	};
+	/*
+	특정 포스트 조회
+	GET /api /posts/:id
+	*/
+	
+	exports.read = ctx => {
+	
+	const {id} = ctx.params;
+	
+	//주어진 id 값으로 포스트를 찾습ㄴ디ㅏ.
+	
+	//파라미터로 받아 온 값은 문자열 형식이므로 숫자로 변환하거나
+	
+	//비교할 p.id 값을 문자열로 변경해야 합니다.
+	
+	const post = posts.find(p=>p.id.toString() === id );
+	
+	if(!post){
+	
+	ctx.status = 404;
+	
+	ctx.body = {
+	
+	message : '포스트가 존재 하지 않습니다',
+	
+	};
+	
+	return;
+	
+	}
+	
+	ctx.body = post;
+	
+	};
+	
+	  
+	
+	/*
+	
+	포스트 목록 wprj
+	
+	DELETE /api /posts/:id
+	
+	*/
+	
+	  
+	
+	exports.remove = ctx=>{
+	
+	const {id} = ctx.params;
+	
+	//해당 id 를 가진 post가 몇 번째인지 확인합니다.
+	
+	const index = posts.findIndex(p =>p.id.toString() ==== id);
+	
+	//포스트가 없으면 오류를 반환합니다.
+	
+	if(index === -1){
+	
+	ctx.status =404;
+	
+	ctx.body = {
+	
+	message = '포스트가 존재하지 않습니다.'
+	
+	};
+	
+	return;
+	
+	}
+	
+	//index번째 아이템을 제거합니다.
+	
+	posts.splice(index,1);
+	
+	ctx.status = 204; //No Content
+	
+	};
+	
+	/*
+	
+	포스트 수정(교체)
+	
+	GET /api/posts/:id
+	
+	{title, body}
+	
+	*/
+	
+	  
+	
+	exports.replace = ctx => {
+	
+	//PUT 메서드는 전체 포스트 정보를 입력하여 데이터를 통째로 교체할 때 사용합니다.
+	
+	const {id} = ctx.params;
+	
+	//해당 id를 가진 post가 몇 번재인지 확인합니다.
+	
+	const index = posts.findIndex(p => p.id.toString() === id);
+	
+	//포스트가 없으면 오류를 반환합니다.
+	
+	if(index === -1){
+	
+	ctx.status = 404;
+	
+	ctx.body = {
+	
+	message : '포스트가 존재하지 않습니다.'
+	
+	};
+	
+	return;
+	
+	}
+	
+	//전체 객체를 덮어 씌웁니다.
+	
+	//따라서 id를 제외한 기존 정보를 날리고, 객체를 새로 만듭니다.
+	
+	post[index]= {
+	
+	id,
+	
+	...ctx.request.body,
+	
+	};
+	
+	ctx.body=posts[index];
+	
+	};
+	
+	  
+	
+	/*
+	
+	포스트 수정(특정 필드 변경)
+	
+	PATCH /api /posts/:id
+	
+	{title, body}
+	
+	*/
+	
+	exports.update = ctx => {
+	
+	//PATCH 메서드는 주어진 필드만 교체합니다.
+	
+	const { id } = ctx.params;
+	
+	//해당 id를 가진 post가 몇 번째 인지 확인합니다
+	
+	const index = posts.findIndex(p=>p.id.toString() === id);
+	
+	//포스트가 없으면 오류를 반환합니다.
+	
+	if(index === -1){
+	
+	ctx.status =404;
+	
+	ctx.body = {
+	message : '포스트가 존재하지 않습니다.'
+	};
+	return;
+	}
+	//기존 값에 정보를 덮어 씌웁니다.
+	posts[index] = {
+	...posts[index],
+	...ctx.request.body,
+	};
+	ctx.body = posts[index];
+	}
+	
+
+
+<p>컨트롤러를 만들면서 exports. 이름 = ... 형식으로 함수를 내보내 주었습니다. 이렇게 내보낸 코드는 다음형식으로 볼수있습니다.
+
+	const 모듈이름 = require('파일이름');
+	모듈이름.이름();
+
+<p> require('./posts.ctrl')을 입력하면 방금 만든 posts.ctrl.js 파일을 불러온다면 다음 객체를 불러오게 됩니다.
+	
+	{
+	write : Funtion,
+	list : Funtion,
+	read :Funtion,
+	remove : Funtion,
+	replace :Funtion,
+	update : Funtion,	
+	}
+
+<p>우리가 만든 컨트롤러 함수들을 한번 각 라우트에 연결시켜보겠습니다.
+	const Router = require('koa-router');
+	const postsCtrl = require('./posts.ctrl');
+	
+	const posts = new Router();
+	
+	const printInfo = ctx => {
+	ctx.body = {
+	method : ctx.method,
+	path : ctx.path,
+	params : ctx.params,
+		};
+	};
+	posts.get('/', postsCtrl.list);
+	posts.post('/',postsCtrl.write);
+	posts.get('/:id', postsCtrl.read);
+	posts.delete('/:id',postsCtrl.remove);
+	posts.put('/:id',postsCtrl.replace);
+	posts.patch('/:id',postsCtrl.update);
+	module.exports = posts;
+
+<p>이제 posts 라웥가 완성되었습니다.
+
+<p>list , read, remove를 제외한 API들을 요청할 때 Request body가 필요한데,POostman에서 이 값을 어떻게 넣는지 알아보십니다.
+
+Postman에서 POST를 선택하면 다음과 같이 body부분이 활성화됩니다. BODY탭을 선택하고 raw 옵션을 클릭한 후 주황색으로 나타내는 데이터 타입을 JSON으로 설정하세요. 그리고 하단 텍스트 박스에 다음 JSON을 입력하세요
+
+	{
+		"title" : "테스팅",
+		"body" : "테스팅"
+	}
+<p>실행하면 아래 사진과같이 나옵니다
+
+	
+![[Pasted image 20220928204601.png]]
+
+<p> 아래는 요청 PATCH
+
+![[Pasted image 20220928204820.png]]
+
+
+<p> PUT
+
+![[Pasted image 20220928205021.png]]
+
+<p>PUT 메서드를 사용하니 기존 body가 사라져 버렸습니다. 따라서 포스트 수정 API를 PUT으로 구현해야 할때는 모든 필드가 다 있는지 검증하는 작업이 필요합니다.
+
+
+## 정리
+
+<p>이장에서 Koa를 사용하여 백엔드 서버를 만드는 기본 개념을 대해 알아보았습니다. 먼저 REST API를 살펴 본후 어떻게 작동하는지를 자바스크립트 배열을 사용하여 구현하면서 알아보았습니다. 자바스크립트 배열을 사용하여 구현하며 서버를 재시작할 때 당연히 데이터가 소멸됩니다. 물론 이 데이터를 로컬 파일에 저장하는 방법도 있지만 , 그대신 MySQL, MongoDB 등의 데이터베이스에 정보를 저장하여 관리합니다.
+

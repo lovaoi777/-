@@ -123,3 +123,162 @@
 <p>❗️실행 화면 
 
 ![[Pasted image 20221004180534.png]]
+
+
+### 2.3 Mongoose의 설치 및 적용
+
+<p> mongoose는 Node.js 환경에서는 사용하는 MongoDB 기반 ODM(Object Data Modelling) 라이브러리입니다. 이 라이브러리는 데이터베이스 문서들을 자바스크립트 객체처럼 사용할 수 있게 해줍니다.
+
+<p>프로젝트 디렉터링서 다음 명령어를 입력하여 mongoose와 dotenv를 설치하세요.
+
+<p>👍dotenv는 환경변수들을 파일에 넣고 사용할 수 있게 하는 개발 도구입니다. mongoose를 사용하여 MongoDB에 접속할 때, 서버에 주소나 계정 및 비밀번호가 필요할 경우도 있습니다. 이렇게 민감하거나 환경별로 달라질 수 있는 값은 코드안에 직접 작성하지 않고, 환경변수로 설정하는 것이 좋습니다.
+
+
+#### 2.3.1 .env 환경변수 파일 생성
+
+<p> 환경변수에는 서버에서 사용할 포트와 MongoDB 주소를 넣어 주겠습니다. 프로젝트의 루트 경로에 .env 파일을 만들고 다음 내용을 입력하세요
+
+<p>.env
+
+	PORT=4000
+	MONGO_URL=mongodb://localhost:27017/blog
+
+<p>여기서 blog는 우리가 사용할 데이터베이스 이름입니다. 지정한 데이터베이스가 서버에 없다면 자동으로 만들어 주므로 사전에 직접 생성할 필요는 없습니다.
+
+<p> 다음으로 src/index.js 파일의 맨 위 다음과 같이 dotenv를 불러와서 config() 함수를 호출해주세요. Node.js에서 환경변수는 process.env 값을 통해 조회할 수 있습니다.
+
+	require('dotenv').config();
+	const Koa = require('koa');
+	const Router = require('koa-router');
+	const bodyParser = require('koa-bodyparser');
+	
+	
+	//비구조화 할당을 통해 process.env 내부 값에 대한 래퍼런스 만들기
+	// eslint-disable-next-line no-undef
+	const { PORT } = process.env;
+	const api = require('./api');
+	const app = new Koa();
+	const router = new Router();
+	//라우터 설정
+	router.use('/api', api.routes());
+	
+	//라우터 적용 전에 bodyParser적용
+	app.use(bodyParser());
+	
+	//app 인스턴스에 라우터 적용
+	app.use(router.routes()).use(router.allowedMethods());
+	
+	//PORT가 지정되지 있지 않다면 4000을 사용
+	const port = PORT || 4000;
+	app.listen(port, ()=>{
+	console.log('Listening to port %d',port);
+	});
+
+<p>.env 파일에서 PORT를 4001로 변경한 뒤 서버를 한번 재시작해 보세요. .env 파일을 변경할 때는 nodemon에서 자동으로 재시작하지 않으므로 직접 재시작해야 합니다.
+
+	Listening to port 4001
+
+
+#### 2.3.2 Mongoose 로 서버와 데이터베이스 연결
+
+<p> 이제 mongoose를 이용하여 서버와 데이터베이스를 연결하겠습니다. 연결할 때는 mongoose의 connect 함수를 사용합니다.
+	
+	require('dotenv').config();
+	const Koa = require('koa');
+	const Router = require('koa-router');
+	const bodyParser = require('koa-bodyparser');
+	const mongoose = require('mongoose');
+	//비구조화 할당을 통해 process.env 내부 값에 대한 래퍼런스 만들기
+	// eslint-disable-next-line no-undef
+	const { PORT,MONGO_URI } = process.env;
+	
+	mongoose
+	.connect(MONGO_URI)
+	.then(()=>{
+	console.log('Connected to MongoDB');
+	})
+	.catch(e => {
+	console.log(e);
+	});
+	
+	(...)
+
+
+![[Pasted image 20221006022124.png]]
+
+<p>실행하면 위와 같이 문구가 출력되면 데이터베이스에 성공적으로 연결된 거십니다.
+
+
+### 2.4 esm으로 ES 모듈 import/export 문법 사용하기
+
+<p>기존  리액트 프로젝트에서 사용해 오던 ES 모듈 import /export 문법은 Node.js에서 아직 정식으로 지원 되지 않습니다. Node.js에 해당 기능이 구현되어 있기는 하지만 아직 실험적인 단계이기 때문에 기본 옵션으로는 사용 할 수 없으며, 확장자를 .mjs로 사용하고  node를 실행 할때 --experimental-modules라는 옵션을 넣어 주어야 합니다.
+
+<p>Node.js에서 import/export 문법을 꼭 사용해야 할 필요는 없지만, 이 문법을 사용하면 VS Code에서  자동완성을 통해 모듈을 자동으로 쉽게 불러올 수 도있고 코드도 더욱 깔끔해 집니다. 그 래서 우리는 esm이라는 라이브러리의 도음을 받아 해당 문법을 사용해 보겠습니다.
+
+<p>먼저 esm을 yarn으로 설치해주세요.
+
+	yarn add esm
+
+<p> ❗️기존 src/index.js 파일의 이름을 main.js 로 변경하고, index.js 파일을 새로 생성해서 다음코드를 입력하세요.
+
+	// 이 파일에서만 no-global-assign ESLint 옵션을 비활성화합니다.
+	/* eslint-disable no-global-assign */
+	
+	require = require('esm')(module /*, options*/);
+	module.exports = require('.main.js');
+
+<p> 다음으로는 package.json 에서 만들었던 스크립트를 조금 수정해 주세요.
+
+![[Pasted image 20221006024101.png]]
+
+<p>ESLint 에서 import/export 구문을 사용해도 오류로 간주하지 않도록 다음과 같이 , eslintrc.json 에서 sourceType 값을 "modules" 로 설정해주세요.
+
+	"parserOptions": {
+		"ecmaVersion": "latest"
+		"sourceType": "module"
+	},
+
+<p> 이제 프로젝트에서 import/export 구문을 자유롭게 사용 할 수 있습니다. 그리고 이전에 만들었던 모듈을 한하나 수정해주 겠습니다.
+
+<p>기존에 실행 중이던 서버는 종료하고, 다시 yarn start:dev 명령어를 입력하여 새로운 스크립트로  서버를 구동하겟습니다.
+
+#### 2.4.2 기존 코드 ES Module 형태로 바꾸기 
+
+<p> 먼저 api/posts/posts.ctrl.js  파일을 열어서 exports 코드를 export const로 모두 변환하세요
+
+	export const write = ctx => { }
+	export const list = ctx => { }
+	export const read = ctx => { } // 아래도 다 똑같이 exports => export const 로 변경하엿씁니다.
+
+<p>다음으로 src/api/posts/index.jsㅇ을 수정하세요
+
+![[Pasted image 20221006032447.png]]
+
+<p>위의 export const  로 변경하였기떄문에 함수 호출형식을 바꿔보았습니다. 하지만 여기까지 코드작성하면 서버에서 오류가 발생합니다 .이 오류는 파일 두개 더 수정하면 해결이 됩니다..
+
+<p>src/api/index.js
+
+![[Pasted image 20221006032557.png]]
+
+
+<p>src/main.js
+
+![[Pasted image 20221006032616.png]]
+
+<p> 이제 Postman으로 주소에 요청을 보내 우리가 만든 서버가 오류발생으로 종료되지 않고 잘 작동되는 지 확인할것❗️
+
+![[Pasted image 20221006032718.png]]
+
+
+<p>코드를 다 작성하고 확인했으면, 마지막으로 프로젝트 루트 디렉터리에 jsconfig.json을 작성하세요
+
+<p>jsconfig.json 
+
+![[Pasted image 20221006032841.png]]
+
+<p>이 파일을 위 코드와 같이 작성해주면 나중에 자동 완성을 통해 모듈을 불러올 수 있습니다. src 디렉터리에 sample.js라는 파일을 작성하고 , api을 입력했을 떄 자동 완성할수 있는인텔리 창이 뜨는지 확인하세요.!
+
+![[Pasted image 20221006033008.png]]
+
+
+

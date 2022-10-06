@@ -282,3 +282,83 @@
 
 
 
+### 2.5 데이터베이스의 스키마와 모델
+
+<p> mongoose에는 스키마(schema)와 모델(model) 이라는 개념이 있다.   ❗️스키마는 컬렉션에 들어가는 문서 내부의 각 필드가 어떤 형식으로 되어 있는지 정의 하는 객체이다.  ❗️모델은 스키마를 사용하여 만드는 인스턴스로, 데이터베이스에서 실제 작업을 처리할 수 있는 함수들을 지니고 있는 객체입니다.
+
+
+![[Pasted image 20221007025204.png]]
+
+#### 2.5.1 스키마 생성
+
+<p>모델을 만들려면 사전에 스키마를 만들어 주어야 합니다. 우리는 블로그 포스트에 대한 스키마를 준비할 텐데, 어떤 데이터기 필요한지 ?
+
+<li>제목
+<li>내용
+<li>태그
+<li>작성일
+
+<p> 포스트 하나에 이렇게 총 네 가지 정보가 필요합니다. 각 정보에 대한 필드 이름과 데이터 타입을 설정하여 스키마를 만듭니다.
+
+![[Pasted image 20221007025353.png]]
+
+<P> 이렇게  4가지 필드가 있는 스키마를 만들어 보겠습니다. 스키마와 모델에 관련된 코드는 src/modules디렉터리에 작성하겠습니다. 이렇게 디렉터리를 따로 만들어서 관리하면 나중에 유지 보수를 좀 더 편하게 할 수있습니다. models 디렉터리를 만들고, 그 안에 post.js 파일을 만들어 다음 코드를 작성하겠습니다.
+
+	import mongoose from "mongoose";
+	const {Schma} = mongoose;
+	
+	const PostSchema = new Schma({
+	title : String,
+	body : String,
+	tage : [String], //문자열로 이루어진 배ㄹ
+	publishedDate : {
+			type : Date,
+			default : Date.now, //현재 날짜를 기본값으로 지정
+		},
+	});
+
+<p>스키마를 만들 때는 mongoose 모듈의 Schema를 사용하여 정의합니다. 그리고 각 필드 이름과 필드의 데이터 타입 정보각 들어 있는 객체를 생성 합니다. 필드의 기본값으로 default 값을 설정 해 주면 됩니다. 
+Schma에서 기본적으로 지원하는 타입은 다음 과같습니다.
+
+![[Pasted image 20221007030817.png]]
+
+<p>이 스키마를 활용하여 좀 더 복잡한 방식의 데이터도 저장할 수 있습니다. 예시 코드입니다.
+
+	const AuthorSchema = new Schema({
+		name : String,
+		email : String,
+	});
+	const BookSchema = new Schema({
+		title: String
+		description : String,
+		❗️authors : [AuthorSchema],
+		meta : { 
+			likes : Number,
+			},
+			extra : Schema.Types.Mixed,
+	})
+
+<p> 위 코드에서 authors 부분에 [AuthorSchema]를 넣어 줬는데요. 이는 Author 스키마로 이루어진 여러 개의 객체가 들어 있는 배열을 의미합니다. 이렇게 스키마 내부에  다른 스키마를 내장시킬 수 있습니다.
+
+#### 2.5.2 모델 생성
+
+<p> 모델을 만들 때는 mongoose.model 함수를 사용합니다. post.js 파일 맨 하단에 다음 코드를 입력해보세요.
+
+	const Post = mongoose.model('Post', PostSchema);
+	export default Post;
+
+<p>모델 인스턴스를 만들고, export default를 통해 내보내 주었습니다. 여기서 사용한 model() 함수는 기본적으로 두 개의 파라미터가 필요합니다. 첫 번째 파라미터는 스키마 이름이고, 두 번째 파라미터는 스키마 객체입니다. 데이터베이스는 스키마 이름을 정해 주면 그 이름의 복수 형태로 데이터 베이스에 컬렉션 이름을 만듭니다.
+
+<p>예를 들면 스키마 이름을 Post로 설정하면, 실제 데이터베이스에 만드는 컬렉션 이름은 Posts입니다. BookInfo로 입력하면 bookinfo를 만듭니다.
+
+<p>MongoDB에서 컬렉션 이름을 만들 때, 권장되는 컨벤션은 구분자를 사용하지 않고 복수형태로 사용하는 것 입니다. 이 컨벤션을 따르고 싶지 않다면, 다음 코드처럼 세 번째 파라미터에 내가 원하는 이름을 입력하면 된다.
+
+	mongosse.model('Post',PostShema,'custom_book_collection'); 
+
+<p> 이 경우 첫 번재 파라미터로 넣어 준 이름은 나중에 다른 스키마에서 현재 스키마를 참조해야 하는 상황에서 사용합니다.
+
+
+
+
+
+
